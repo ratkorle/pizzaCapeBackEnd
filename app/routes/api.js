@@ -1,28 +1,28 @@
-var User         = require('../models/user');
-var jwt          = require('jsonwebtoken'); // Keep user logged in using this library
-var secret       = 'polarCape';
-var nodemailer   = require('nodemailer');
-var sgTransport  = require('nodemailer-sendgrid-transport');
+const User = require('../models/user');
+const jwt = require('jsonwebtoken'); // Keep user logged in using this library
+const secret = 'polarCape';
+const nodemailer = require('nodemailer');
+const sgTransport = require('nodemailer-sendgrid-transport');
 
 module.exports = function (router) {
     //SENDGRID information
-    var options = {
+    const options = {
         auth: {
             api_user: 'ratkorle',
             api_key: 'bamboleo'
         }
     };
-    var client = nodemailer.createTransport(sgTransport(options));
+    const client = nodemailer.createTransport(sgTransport(options));
 
 
     // USER REGISTRATION--------------------------------------------
     router.post('/users', function(req, res) {
-    var user = new User();
-    user.username = req.body.username;
+        const user = new User();
+        user.username = req.body.username;
     user.password = req.body.password;
     user.email = req.body.email;
     user.temporarytoken = jwt.sign({  username: user.username, email: user.email }, secret, {expiresIn: '24h' });
-    if (req.body.username == null || req.body.username == '' || req.body.password == null || req.body.password == '' || req.body.email == null || req.body.email == '') {
+    if (req.body.username == null || req.body.username === '' || req.body.password == null || req.body.password === '' || req.body.email == null || req.body.email === '') {
         res.send('You must provide required information to continue');
     } else {
         user.save(function(err) {
@@ -40,14 +40,14 @@ module.exports = function (router) {
                       res.json({ success: false, message: err });                            // In case we don't have problems with validation, we return the error whatever it is
                   }
               } else if (err){
-                  if (err.code == 11000) {
+                  if (err.code === 11000) {
                       res.json({ success: false, message: 'Username or E-mail already exist!' });
                   } else {
                       res.json({ success: false, message: err });
                   }
               }
             } else {
-                var email = {
+                const email = {
                     from: 'Pizza Made Staff, pizzamade@localhost.com',
                     to: user.email,
                     subject: 'Activation Link',
@@ -79,17 +79,21 @@ module.exports = function (router) {
             if (!user) {                                                                                                       // COMPARING IF USER EXIST IN THE DATABASE
                 res.json({ success: false, message: 'Could not authenticate user'});
             } else if (user) {
+                let validPassword;
+
                 if (req.body.password) {
-                    var validPassword = user.comparePassword(req.body.password);
+                    validPassword = user.comparePassword(req.body.password);
                 } else {
                     res.json({ success: false, message: 'No password provided !!'});
+                    return;
                 }
+
                 if (!validPassword) {
                     res.json({ success: false, message: 'Could not authenticate password'});  // after validation of the password we want check if account is active
                 } else if (!user.active) {
                     res.json({ success: false, message: 'The account is not activated yet. Please check your E-mail for activation link', expired: true });
                 } else {
-                  var token =  jwt.sign({ username: user.username, email: user.email }, secret, {expiresIn: '24h'});  //(FRONTEND) we need to save this token in browser storage by implementing it in frontend auth -SERVICES
+                    const token = jwt.sign({username: user.username, email: user.email}, secret, {expiresIn: '24h'});  //(FRONTEND) we need to save this token in browser storage by implementing it in frontend auth -SERVICES
                     res.json({ success: true, message: 'User authenticated !', token: token});
                 }
             }
@@ -123,9 +127,9 @@ module.exports = function (router) {
     router.put('/activate/:token' , function (req, res) {
         User.findOne({ temporarytoken: req.params.token }, function (err, user) {                           //when user clicks on confirmation link its going to be in browser URL so with this we grab it and search the database
             if (err) throw err;
-            var token = req.params.token;
+            const token = req.params.token;
 
-            jwt.verify(token, secret, function(err, decoded) {                                                // here we verify that token we sent if its expired
+            jwt.verify(token, secret, function(err) {                                                // here we verify that token we sent if its expired
                 if (err) {
                     res.json({success: false, message: 'Activation link has expired'});                 // This happens when session is expired
                 } else if (!user){                                                                      // If token is good but doesn't match the token of any user in the database
@@ -137,7 +141,7 @@ module.exports = function (router) {
                         if (err) {
                             console.log(err);
                         }else {
-                            var email = {                                                               // This email template is when user is activated
+                            const email = {                                                               // This email template is when user is activated
                                 from: 'Pizza Made Staff, pizzamade@localhost.com',
                                 to: user.email,
                                 subject: 'Account Activated!',
@@ -170,11 +174,15 @@ module.exports = function (router) {
             if (!user) {                                                                                                       // COMPARING IF USER EXIST IN THE DATABASE
                 res.json({ success: false, message: 'Could not authenticate user'});
             } else if (user) {
+                let validPassword;
+
                 if (req.body.password) {
-                    var validPassword = user.comparePassword(req.body.password);
+                    validPassword = user.comparePassword(req.body.password);
                 } else {
                     res.json({ success: false, message: 'No password provided !!'});
+                    return;
                 }
+
                 if (!validPassword) {
                     res.json({ success: false, message: 'Could not authenticate password'});  // after validation of the password we want check if account is active
                 } else if (user.active) {
@@ -193,7 +201,7 @@ module.exports = function (router) {
                 if (err) {
                     console.log(err);
                 } else {
-                    var email = {
+                    const email = {
                         from: 'Pizza Made Staff, pizzamade@localhost.com',
                         to: user.email,
                         subject: 'Activation Link Request',
@@ -229,7 +237,7 @@ module.exports = function (router) {
                     if (!user) {
                         res.json({ success: false, message: 'E-mail was not found' });
                     } else {
-                        var email = {
+                        const email = {
                             from: 'Pizza Made Staff, pizzamade@localhost.com',
                             to: user.email,
                             subject: 'Username Request',
@@ -268,7 +276,7 @@ module.exports = function (router) {
                     if (err) {
                         res.json({ success: false, message: err });
                     } else {
-                        var email = {
+                        const email = {
                             from: 'Pizza Made Staff, pizzamade@localhost.com',
                             to: user.email,
                             subject: 'Reset Password Request',
@@ -296,8 +304,8 @@ module.exports = function (router) {
         router.get('/resetpassword/:token', function (req, res) {
             User.findOne({ resettoken: req.params.token }).select().exec(function (err, user) {
                 if (err) throw err;
-                var token = req.params.token;
-                jwt.verify(token, secret, function(err, decoded) {
+                const token = req.params.token;
+                jwt.verify(token, secret, function(err) {
                     if (err) {
                         res.json({success: false, message: 'Password link has expired'}); // This happens when session is expired
                     } else {
@@ -315,7 +323,7 @@ module.exports = function (router) {
         router.put('/savepassword/', function (req, res) {
             User.findOne({ username: req.body.username }).select('username name email password resettoken').exec(function (err, user) {
                if (err) throw err;
-              if (req.body.password == null || req.body.password == '') {
+              if (req.body.password == null || req.body.password === '') {
                   res.json({ success: false, message: 'Password not provided' });
               } else {
                   user.password = req.body.password;
@@ -324,7 +332,7 @@ module.exports = function (router) {
                       if (err) {
                           res.json({ success: false, message: err });
                       } else {
-                          var email = {
+                          const email = {
                               from: 'Pizza Made Staff, pizzamade@localhost.com',
                               to: user.email,
                               subject: 'Reset Password Request',
@@ -347,14 +355,11 @@ module.exports = function (router) {
               }
             });
         });
-
-
-
-
     });
+
     //Create Middleware for token
     router.use(function (req, res, next) {
-        var token = req.body.token || req.body.query || req.headers['x-access-token']; // Get from REQUEST or URL or HEADERS
+        const token = req.body.token || req.body.query || req.headers['x-access-token']; // Get from REQUEST or URL or HEADERS
 
         if (token) {
             // verify a token symmetric

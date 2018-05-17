@@ -1,14 +1,14 @@
-var express      = require('express');
-var app          = express();                                     // (to make the application run)
-var port         = process.env.PORT || 7000;
-var morgan       = require('morgan');                             // (HTTP request logger middleware)
-var mongoose     = require('mongoose');                           // (object data modeling to simplify interactions with MongoDB)
-var bodyParser   = require('body-parser');                        // (for parsing incoming requests)
-var router       = express.Router();                              //  "express.Router() creates an object that behaves similar to the app object."
-var appRoutes    = require('./app/routes/api')(router);          // requires all the routes from api.js (register user, log in ... )
-var path         = require('path');                              // The path module provides utilities for working with file and directory paths.
-var passport     = require('passport');                              // Passport is authentication middleware for Node.js. support authentication using a username and password, Facebook, Twitter, and more.
-var social       = require('./app/passport/passport')(app, passport);
+const express = require('express');
+const app = express();                                     // (to make the application run)
+const port = process.env.PORT || 7000;
+const morgan = require('morgan');                             // (HTTP request logger middleware)
+const mongoose = require('mongoose');                           // (object data modeling to simplify interactions with MongoDB)
+const bodyParser = require('body-parser');                        // (for parsing incoming requests)
+const router = express.Router();                              //  "express.Router() creates an object that behaves similar to the app object."
+const appRoutes = require('./app/routes/api')(router);          // requires all the routes from api.js (register user, log in ... )
+const path = require('path');                              // The path module provides utilities for working with file and directory paths.
+const passport = require('passport');                              // Passport is authentication middleware for Node.js. support authentication using a username and password, Facebook, Twitter, and more.
+const social = require('./app/passport/passport')(app, passport);
 
 
 app.use(morgan('dev'));                                          //START LOG IN THE REQUEST

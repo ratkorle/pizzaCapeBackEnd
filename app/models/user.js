@@ -1,11 +1,11 @@
-var mongoose    = require('mongoose');
-var Schema      = mongoose.Schema;
-var bcrypt      = require('bcrypt-nodejs');
-var titlize     = require('mongoose-title-case');
-var validate    = require('mongoose-validator');
+const mongoose = require('mongoose');
+const Schema = mongoose.Schema;
+const bcrypt = require('bcrypt-nodejs');
+const titlize = require('mongoose-title-case');
+const validate = require('mongoose-validator');
 
 // VALIDATORS
-var nameValidator = [
+const nameValidator = [
     validate({
         validator: 'matches',
         arguments: /^(([a-zA-Z]{3,20})+[ ]+([a-zA-Z]{3,20})+)+$/,   //Regular Expression for First Name and Last name that must be alphabetic 3-20 characters and space between them.
@@ -17,7 +17,7 @@ var nameValidator = [
         message: 'Name should be between {ARGS[0]} and {ARGS[1]} characters'
     })
 ];
-var emailValidator = [
+const emailValidator = [
     validate({
         validator: 'isEmail',
         message: 'You have to provide valid e-mail !'
@@ -28,7 +28,7 @@ var emailValidator = [
         message: 'E-mail should be between {ARGS[0]} and {ARGS[1]} characters'
     })
 ];
-var usernameValidator = [
+const usernameValidator = [
     validate({
         validator: 'isLength',
         arguments: [5, 30],
@@ -39,7 +39,7 @@ var usernameValidator = [
         message: 'Name should contain alpha-numeric characters only'
     })
 ];
-var passwordValidator = [
+const passwordValidator = [
     validate({
         validator: 'matches',
         arguments: /^([1-zA-Z0-1@.\s]{5,25})$/,
@@ -54,19 +54,19 @@ var passwordValidator = [
 
 
 // BASIC USERNAME SCHEMA
-var UserSchema = new Schema({
+const UserSchema = new Schema({
     name: {type: String, required: true, validate: nameValidator},
-    username:  {type: String, lowercase: true, required: true, unique: true, validate: usernameValidator},
+    username: {type: String, lowercase: true, required: true, unique: true, validate: usernameValidator},
     password: {type: String, required: true, validate: passwordValidator, select: false},
     email: {type: String, required: true, lowercase: true, unique: true, validate: emailValidator},
-    active: { type: Boolean, required: true, default: false },
-    temporarytoken: { type: String, required: true},
-    resettoken: { type: String, required: false }
+    active: {type: Boolean, required: true, default: false},
+    temporarytoken: {type: String, required: true},
+    resettoken: {type: String, required: false}
 });
 
 // SETTING UP PASSWORD PROTECTION USING BCRYPT
 UserSchema.pre('save', function(next) {
-    var user = this;
+    const user = this;
     if (!user.isModified('password')) return next();                // If password is not touched don't do this function
     bcrypt.hash(user.password, null, null, function(err, hash) {
       if (err) return next(err);
@@ -75,6 +75,7 @@ UserSchema.pre('save', function(next) {
     });
 
 });
+
 // Mongoose TiTle Case Schema
 UserSchema.plugin(titlize, {
     paths: [ 'name']
@@ -85,9 +86,4 @@ UserSchema.methods.comparePassword = function (password) {
   return bcrypt.compareSync(password, this.password);
 };
 
-
-
-
 module.exports = mongoose.model('User', UserSchema);
-
-

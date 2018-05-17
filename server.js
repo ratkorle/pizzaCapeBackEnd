@@ -1,0 +1,36 @@
+var express      = require('express');
+var app          = express();                                     // (to make the application run)
+var port         = process.env.PORT || 7000;
+var morgan       = require('morgan');                             // (HTTP request logger middleware)
+var mongoose     = require('mongoose');                           // (object data modeling to simplify interactions with MongoDB)
+var bodyParser   = require('body-parser');                        // (for parsing incoming requests)
+var router       = express.Router();                              //  "express.Router() creates an object that behaves similar to the app object."
+var appRoutes    = require('./app/routes/api')(router);          // requires all the routes from api.js (register user, log in ... )
+var path         = require('path');                              // The path module provides utilities for working with file and directory paths.
+var passport     = require('passport');                              // Passport is authentication middleware for Node.js. support authentication using a username and password, Facebook, Twitter, and more.
+var social       = require('./app/passport/passport')(app, passport);
+
+
+app.use(morgan('dev'));                                          //START LOG IN THE REQUEST
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));              // START PARSING THE DATA
+app.use('/api', appRoutes);                                      // USE THE ROUTES ( IT'S IMPORTANT ROUTES TO BE LAST BECAUSE THE REQUESTED DATA MUST BE PARSED)
+app.use(express.static(__dirname + '/public'));                  // WITH THIS ONE WE LET FRONTEND TO ACCESS TO BACKEND
+                                                                // WE ARE ADDING '/api' SO IT WILL DECONFLICT THE BACKEND AND FRONT-END ROUTES
+
+
+mongoose.connect('mongodb://localhost:27017/pizzacapedb', function(err) {       // Connecting to MongoDB(pizzacapedb)
+    if (err) {
+        console.log('Cannot connect to the database: ' + err);
+    } else {
+        console.log('Successfully connected to MongoDB');
+    }
+});
+
+app.get('*', function(req, res) {                                       // we use * so no matter what users types we feed them with this file
+    res.sendFile(path.join(__dirname + '/public/app/views/index.html')); // we take the current path and join with the html file
+});
+
+app.listen(port, function () {
+    console.log('server is running on port ' + port);
+});

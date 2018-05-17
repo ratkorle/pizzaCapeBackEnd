@@ -1,12 +1,13 @@
-var FacebookStrategy    = require('passport-facebook').Strategy;
-var GoogleStrategy      = require('passport-google-oauth').OAuth2Strategy;
-var User                = require('../models/user');
-var session             = require('express-session');
-var jwt                 = require('jsonwebtoken'); // Keep user logged in using this library
-var secret              = 'polarCape';
+const FacebookStrategy = require('passport-facebook').Strategy;
+const GoogleStrategy = require('passport-google-oauth').OAuth2Strategy;
+const User = require('../models/user');
+const session = require('express-session');
+const jwt = require('jsonwebtoken'); // Keep user logged in using this library
+const secret = 'polarCape';
 
 
 module.exports = function (app, passport) {
+    let token;
     //INITIALIZE
     app.use(passport.initialize());
     app.use(passport.session());

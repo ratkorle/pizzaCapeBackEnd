@@ -5,13 +5,14 @@ const nodemailer = require('nodemailer');
 const sgTransport = require('nodemailer-sendgrid-transport');
 
 module.exports = function (router) {
+    // Start Sendgrid Configuration Settings (Use only if using sendgrid)
     //SENDGRID information
-    const options = {
-        auth: {
-            api_user: 'ratkorle',
-            api_key: 'bamboleo123'
-        }
-    };
+    //  const options = {
+    //    auth: {
+    //        api_user: 'ratkorle',
+    //        api_key: 'bamboleo123'
+    //    }
+    //    };
 
     const client = nodemailer.createTransport({
         service: 'Hotmail',
@@ -21,22 +22,25 @@ module.exports = function (router) {
         },
         tls: { rejectUnauthorized: false }
     });
+    // var client = nodemailer.createTransport(sgTransport(options)); // Use if using sendgrid configuration
 
 
     // USER REGISTRATION--------------------------------------------
     router.post('/users', function(req, res) {
-        const user = new User();
-        user.name = req.body.name;
-        user.username = req.body.username;
-        user.password = req.body.password;
-        user.email = req.body.email;
-        user.temporarytoken = jwt.sign({  username: user.username, email: user.email }, secret, {expiresIn: '24h' });
+        const user = new User();                    // Create new User object
+        user.name = req.body.name;                   // Save name from request to User object
+        user.username = req.body.username;          // Save username from request to User object
+        user.password = req.body.password;          // Save password from request to User object
+        user.email = req.body.email;                // // Save email from request to User object
+        user.temporarytoken = jwt.sign({  username: user.username, email: user.email }, secret, {expiresIn: '24h' });   // Create a token for activating account through e-mail
 
+        // Check if request is valid and not empty or null
         if (req.body.name === null || req.body.name === '' || req.body.username === null || req.body.username === '' || req.body.password === null || req.body.password === '' || req.body.email === null || req.body.email === '') {
             res.send('You must provide required information to continue');
         } else {
+            // Save new user to database
             user.save(function(err) {
-                if (err) {
+                if (err) {                                                                           // Check if any validation errors exists (from user model)
                   if (err.errors !== null) {                                                     // if there is null we don't want to do all the validation
                       if (err.errors.name) {
                           res.json({ success: false, message: err.errors.name.message});
@@ -49,7 +53,7 @@ module.exports = function (router) {
                       } else {
                           res.json({ success: false, message: err });                            // In case we don't have problems with validation, we return the error whatever it is
                       }
-                  } else if (err){
+                  } else if (err){                                                                 // Check if duplication error exists
                       if (err.code === 11000) {
                           res.json({ success: false, message: 'Username or E-mail already exist!' });
                       } else {
@@ -83,11 +87,12 @@ module.exports = function (router) {
 
     //USER LOGIN ---------------------------------------
     router.post('/authenticate', function (req, res) {
-        User.findOne({ username: req.body.username }).select('email username password active').exec(function (err, user) {
+        const loginUser = (req.body.username).toLowerCase(); // Ensure username is checked in lowercase against database
+        User.findOne({ username: loginUser }).select('email username password active').exec(function (err, user) {
             if (err) throw err;
 
             if (!user) {                                                                                                       // COMPARING IF USER EXIST IN THE DATABASE
-                res.json({ success: false, message: 'Could not authenticate user'});
+                res.json({ success: false, message: 'User does not exist'});                     // Username not found in database
             } else if (user) {
                 let validPassword;
 
@@ -137,16 +142,17 @@ module.exports = function (router) {
     router.put('/activate/:token' , function (req, res) {
         User.findOne({ temporarytoken: req.params.token }, function (err, user) {                           //when user clicks on confirmation link its going to be in browser URL so with this we grab it and search the database
             if (err) throw err;
-            const token = req.params.token;
+            const token = req.params.token;                                                         // Save the token from URL for verification
 
-            jwt.verify(token, secret, function(err) {                                                // here we verify that token we sent if its expired
+            jwt.verify(token, secret, function(err, token) {                                                // here we verify that token we sent if its expired
                 if (err) {
                     res.json({success: false, message: 'Activation link has expired'});                 // This happens when session is expired
                 } else if (!user){                                                                      // If token is good but doesn't match the token of any user in the database
                     res.json({success: false, message: 'Activation link has expired'});
                 } else {
-                    user.temporarytoken = false;
-                    user.active = true;
+                    user.temporarytoken = false;    // Remove temporary token
+                    user.active = true;             // Change account status to Activated
+                    // Mongoose Method to save user into the database
                     user.save(function (err) {
                         if (err) {
                             console.log(err);
@@ -282,6 +288,7 @@ module.exports = function (router) {
                 res.json({ success: false, message: 'Account has not yet been activated!' });
             } else {
                 user.resettoken = jwt.sign({  username: user.username, email: user.email }, secret, {expiresIn: '24h' });
+                // Save token to user in database
                 user.save(function (err) {
                     if (err) {
                         res.json({ success: false, message: err });
@@ -315,7 +322,7 @@ module.exports = function (router) {
             User.findOne({ resettoken: req.params.token }).select().exec(function (err, user) {
                 if (err) throw err;
                 const token = req.params.token;
-                jwt.verify(token, secret, function(err) {
+                jwt.verify(token, secret, function(err, decoded) {
                     if (err) {
                         res.json({success: false, message: 'Password link has expired'}); // This happens when session is expired
                     } else {
@@ -336,8 +343,9 @@ module.exports = function (router) {
               if (req.body.password === null || req.body.password === '') {
                   res.json({ success: false, message: 'Password not provided' });
               } else {
-                  user.password = req.body.password;
-                  user.resettoken = false;
+                  user.password = req.body.password;                // Save user's new password to the user object
+                  user.resettoken = false;                          // Clear user's resettoken
+                  // Save user's new data
                   user.save(function (err) {
                       if (err) {
                           res.json({ success: false, message: err });
@@ -368,6 +376,7 @@ module.exports = function (router) {
     });
 
     //Create Middleware for token
+    // Middleware for Routes that checks for token - Place all routes after this route that require the user to already be logged in
     router.use(function (req, res, next) {
         const token = req.body.token || req.body.query || req.headers['x-access-token']; // Get from REQUEST or URL or HEADERS
 
@@ -378,7 +387,7 @@ module.exports = function (router) {
                     res.json({success: false, message: 'Token invalid'}); // This happens when session is expired
                 } else {
                     req.decoded = decoded;                                  //decoded basically takes the token combines with the SECRET, verifies it nad once its good it sends back decoded and sends back username and email
-                    next();
+                    next();         // Required to leave middleware
                 }
 
             });
@@ -390,7 +399,7 @@ module.exports = function (router) {
     router.post('/me', function (req, res) {
         res.send(req.decoded);
     });
-
+    // Route to provide the user with a new token to renew session
 //RENEW TOKEN.. after the middleware coz user must be logged in
     router.get('renewToken/:username', function (req, res) {
         User.findOne({ username: req.body.username }).select().exec(function (err, user) {
@@ -405,13 +414,14 @@ module.exports = function (router) {
     });
 
     // PERMISSIONS
+    // Route to get the current user's permission level
     router.get('permission', function (req, res) {
         User.findOne({ username: req.decoded.username }, function (err, user) {
             if (err) throw err;
             if (!user) {
                 res.json({ success: false, message: 'No user was found' });
             } else {
-                res.json({ success: true, permission: user.permission });
+                res.json({ success: true, permission: user.permission }); // Return the user's permission
             }
         });
     });
@@ -425,6 +435,7 @@ module.exports = function (router) {
                 if (!mainUser) {
                     res.json({ success: false, message: 'No user found.' });
                 } else {
+                    // Check if user has editing/deleting privileges
                     if (mainUser.permission === 'admin' || mainUser.permission === 'moderator') {
                         if (!users) {
                             res.json({ success: false, message: 'Users not found' });
@@ -441,7 +452,7 @@ module.exports = function (router) {
     });
     // DELETE USERS (admin only)
     router.delete('/management/:username', function (req, res) {
-        const deletedUser = req.params.username;
+        const deletedUser = req.params.username;                    // Assign the username from request parameters to a variable
         if (!mainUser) {
             res.json({success: false, message: 'No user found.'});
         } else {
@@ -485,6 +496,7 @@ module.exports = function (router) {
         if (req.body.username)  newUsername = req.body.username;
         if (req.body.email)  newEmail = req.body.email;
         if (req.body.permission)  newPermission = req.body.permission;
+        // Look for logged in user in database to check if have appropriate access
         User.findOne({username: req.decoded.username}, function (err, mainUser) {
             if (err) throw err;
             if (!mainUser) {

@@ -17,17 +17,22 @@ module.exports = function (app, passport) {
         saveUninitialized: true,
         cookie: { secure: false }
     }));
-    // serialize
+    // serialize users once logged in
     passport.serializeUser(function(user, done) {
+        // check if users's social media has an error
         if (user.active) {
-            token =  jwt.sign({ username: user.username, email: user.email }, secret, {expiresIn: '24h'});
+            if (user.error) {
+                token = 'unconfirmed/error';
+            } else {
+                token =  jwt.sign({ username: user.username, email: user.email }, secret, {expiresIn: '24h'});
+            }
         } else {
             token = 'inactive/error';
         }
 
         done(null, user.id);
     });
-
+        //DESERIALIZE Users once logged in
     passport.deserializeUser(function(id, done) {
         User.findById(id, function(err, user) {
             done(err, user);
@@ -45,13 +50,13 @@ module.exports = function (app, passport) {
         console.log('profile._json.email');
         User.findOne({ email: profile._json.email}).select('username active password email').exec(function (err, user) {
             if (err) done(err);
-            if (user && user != null) {    // this helps if user has not verified his confirmation email
+            if (user && user !== null) {    // this helps if user has not verified his confirmation email
                 done(null, user);
             } else {
                 done(err);
             }
         });
-           // done(null, profile); we dont want to return facebook profile , we want to return user from database
+           // done(null, profile); we don't want to return facebook profile , we want to return user from database
         }
     ));
 
@@ -64,7 +69,7 @@ module.exports = function (app, passport) {
         function(accessToken, refreshToken, profile, done) {
             User.findOne({ email: profile.emails[0].value}).select('username active password email').exec(function (err, user) {
                 if (err) done(err);
-                if (user && user != null) {    // this helps if user has not verified his confirmation email
+                if (user && user !== null) {    // this helps if user has not verified his confirmation email
                     done(null, user);
                 } else {
                     done(err);

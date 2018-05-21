@@ -9,66 +9,76 @@ module.exports = function (router) {
     const options = {
         auth: {
             api_user: 'ratkorle',
-            api_key: 'bamboleo'
+            api_key: 'bamboleo123'
         }
     };
-    const client = nodemailer.createTransport(sgTransport(options));
+
+    const client = nodemailer.createTransport({
+        service: 'Hotmail',
+        auth: {
+            user: 'ratko_korle@hotmail.com', // Your email address
+            pass: 'bamboleo123' // Your password
+        },
+        tls: { rejectUnauthorized: false }
+    });
 
 
     // USER REGISTRATION--------------------------------------------
     router.post('/users', function(req, res) {
         const user = new User();
+        user.name = req.body.name;
         user.username = req.body.username;
-    user.password = req.body.password;
-    user.email = req.body.email;
-    user.temporarytoken = jwt.sign({  username: user.username, email: user.email }, secret, {expiresIn: '24h' });
-    if (req.body.username == null || req.body.username === '' || req.body.password == null || req.body.password === '' || req.body.email == null || req.body.email === '') {
-        res.send('You must provide required information to continue');
-    } else {
-        user.save(function(err) {
-            if (err) {
-              if (err.errors != null) {                                                     // if there is null we don't want to do all the validation
-                  if (err.errors.name) {
-                      res.json({ success: false, message: err.errors.name.message});
-                  } else if (err.errors.email) {
-                      res.json({ success: false, message: err.errors.email.message});
-                  } else if (err.errors.username) {
-                      res.json({ success: false, message: err.errors.username.message});
-                  } else if (err.errors.password) {
-                      res.json({ success: false, message: err.errors.password.message});
-                  } else {
-                      res.json({ success: false, message: err });                            // In case we don't have problems with validation, we return the error whatever it is
-                  }
-              } else if (err){
-                  if (err.code === 11000) {
-                      res.json({ success: false, message: 'Username or E-mail already exist!' });
-                  } else {
-                      res.json({ success: false, message: err });
-                  }
-              }
-            } else {
-                const email = {
-                    from: 'Pizza Made Staff, pizzamade@localhost.com',
-                    to: user.email,
-                    subject: 'Activation Link',
-                    text: 'Hello' + user.name + 'Thank you for registering on our site. Please click on the link bellow to complete your activation:' +
-                    'http://localhost:7000/activate/' + user.temporarytoken,
-                    html: 'Hello<strong>' + user.name + '</strong>,<br><br>Thank you for registering on our site.' +
-                    ' Please click on the link bellow to complete your activation:<br><br><a href="http://localhost:7000/activate' + user.temporarytoken + '">http://localhost:7000/activate</a>'
-                };
+        user.password = req.body.password;
+        user.email = req.body.email;
+        user.temporarytoken = jwt.sign({  username: user.username, email: user.email }, secret, {expiresIn: '24h' });
 
-                client.sendMail(email, function(err, info){
-                    if (err ){
-                        console.log(err);
-                    }
-                    else {
-                        console.log('Message sent: ' + info.response);
-                    }
-                });
-                res.json({ success: true, message:'User created. Please check your E-mail for confirmation link'});
-            }
-        });
-      }
+        if (req.body.name === null || req.body.name === '' || req.body.username === null || req.body.username === '' || req.body.password === null || req.body.password === '' || req.body.email === null || req.body.email === '') {
+            res.send('You must provide required information to continue');
+        } else {
+            user.save(function(err) {
+                if (err) {
+                  if (err.errors !== null) {                                                     // if there is null we don't want to do all the validation
+                      if (err.errors.name) {
+                          res.json({ success: false, message: err.errors.name.message});
+                      } else if (err.errors.email) {
+                          res.json({ success: false, message: err.errors.email.message});
+                      } else if (err.errors.username) {
+                          res.json({ success: false, message: err.errors.username.message});
+                      } else if (err.errors.password) {
+                          res.json({ success: false, message: err.errors.password.message});
+                      } else {
+                          res.json({ success: false, message: err });                            // In case we don't have problems with validation, we return the error whatever it is
+                      }
+                  } else if (err){
+                      if (err.code === 11000) {
+                          res.json({ success: false, message: 'Username or E-mail already exist!' });
+                      } else {
+                          res.json({ success: false, message: err });
+                      }
+                  }
+                } else {
+                    const email = {
+                        from: 'Pizza Made Staff, pizzamade@localhost.com',
+                        to: user.email,
+                        subject: 'Activation Link',
+                        text: 'Hello' + user.name + 'Thank you for registering on our site. Please click on the link bellow to complete your activation:' +
+                        'http://localhost:7000/activate/' + user.temporarytoken,
+                        html: 'Hello<strong>' + user.name + '</strong>,<br><br>Thank you for registering on our site.' +
+                        ' Please click on the link bellow to complete your activation:<br><br><a href="http://localhost:7000/activate' + user.temporarytoken + '">http://localhost:7000/activate</a>'
+                    };
+
+                    client.sendMail(email, function(err, info){
+                        if (err ){
+                            console.log(err);
+                        }
+                        else {
+                            console.log('Message sent: ' + info.response);
+                        }
+                    });
+                    res.json({ success: true, message:'User created. Please check your E-mail for confirmation link'});
+                }
+            });
+          }
     });
 
     //USER LOGIN ---------------------------------------
@@ -102,7 +112,7 @@ module.exports = function (router) {
 
     // CHECK USERNAME IF IT IS VALID
     router.post('/checkusername', function (req, res) {
-        User.findOne({ email: req.body.email }).select('username').exec(function (err, user) {
+        User.findOne({ username: req.body.username }).select('username').exec(function (err, user) {
             if (err) throw err;
             if (user) {
                 res.json({ success: false, message: 'That username is already taken...' });
@@ -113,7 +123,7 @@ module.exports = function (router) {
     });
     // CHECK EMAIL IF IT IS VALID
     router.post('/checkemail', function (req, res) {
-        User.findOne({ username: req.body.username }).select('email').exec(function (err, user) {
+        User.findOne({ email: req.body.email }).select('email').exec(function (err, user) {
             if (err) throw err;
             if (user) {
                 res.json({ success: false, message: 'That e-mail is already taken...' });
@@ -323,7 +333,7 @@ module.exports = function (router) {
         router.put('/savepassword/', function (req, res) {
             User.findOne({ username: req.body.username }).select('username name email password resettoken').exec(function (err, user) {
                if (err) throw err;
-              if (req.body.password == null || req.body.password === '') {
+              if (req.body.password === null || req.body.password === '') {
                   res.json({ success: false, message: 'Password not provided' });
               } else {
                   user.password = req.body.password;
@@ -376,17 +386,253 @@ module.exports = function (router) {
             res.json({ success: false, message: 'No token provided'});
         }
     });
-
+    //ROUTE to GET currently logged in user
     router.post('/me', function (req, res) {
         res.send(req.decoded);
     });
 
+//RENEW TOKEN.. after the middleware coz user must be logged in
+    router.get('renewToken/:username', function (req, res) {
+        User.findOne({ username: req.body.username }).select().exec(function (err, user) {
+            if (err) throw err;
+            if (!user) {
+                res.json({ success: false, message: 'No user was found' });
+            } else {
+                const newToken =  jwt.sign({ username: user.username, email: user.email }, secret, {expiresIn: '24h'});  //(FRONTEND) we need to save this token in browser storage by implementing it in frontend auth -SERVICES
+                res.json({ success: true, token: newToken});
+            }
+        });
+    });
 
+    // PERMISSIONS
+    router.get('permission', function (req, res) {
+        User.findOne({ username: req.decoded.username }, function (err, user) {
+            if (err) throw err;
+            if (!user) {
+                res.json({ success: false, message: 'No user was found' });
+            } else {
+                res.json({ success: true, permission: user.permission });
+            }
+        });
+    });
 
+    // MANAGEMENT
+    router.get('/management', function (req, res) {
+        User.find({}, function (err, users) {
+            if (err) throw err;
+            User.findOne({ username: req.decoded.username }, function (err, mainUser) {
+                if (err) throw err;
+                if (!mainUser) {
+                    res.json({ success: false, message: 'No user found.' });
+                } else {
+                    if (mainUser.permission === 'admin' || mainUser.permission === 'moderator') {
+                        if (!users) {
+                            res.json({ success: false, message: 'Users not found' });
+                        } else {
+                            res.json({ success: true, users: users, permission: mainUser.permission });
+                        }
 
+                    } else {
+                        res.json({ success: false, message: 'Insufficient Permissions' });
+                    }
+                }
+            });
+        });
+    });
+    // DELETE USERS (admin only)
+    router.delete('/management/:username', function (req, res) {
+        const deletedUser = req.params.username;
+        if (!mainUser) {
+            res.json({success: false, message: 'No user found.'});
+        } else {
+            if (mainUser.permission !== 'admin') {
+                res.json({ success: false, message: 'Insufficient Permissions' });
+            } else {
+                User.findOneAndRemove({ username: deletedUser }, function (err, user) {
+                        if (err) throw err;
+                        res.json({ success: true, message: 'User Deleted !'});
+                });
+            }
+        }
+    });
 
-
-
+    // Edit User
+    router.get('/edit/:id', function (req, res) {
+        const editUser = req.params.id;
+        User.findOne({ username: req.decoded.username }, function (err, mainUser) {
+            if (err) throw err;
+            if (!mainUser) {
+                res.json({success: false, message: 'No user found.'});
+            } else {
+                if (mainUser.permission === 'admin' || mainUser.permission === 'moderator') {
+                    User.findOne({ _id: editUser }, function (err, user) {
+                        if (err) throw err;
+                        if (!user) {
+                            res.json({ success: false, message: 'No user found' });
+                        } else {
+                            res.json({ success: true, user: user });
+                        }
+                    });
+                } else {
+                    res.json({ success: false, message: 'Insufficient Permissions' });
+                }
+            }
+        });
+    });
+    router.put('/edit', function (req, res) {
+        editUser = req.body._id;
+        if (req.body.name)  newName = req.body.name;
+        if (req.body.username)  newUsername = req.body.username;
+        if (req.body.email)  newEmail = req.body.email;
+        if (req.body.permission)  newPermission = req.body.permission;
+        User.findOne({username: req.decoded.username}, function (err, mainUser) {
+            if (err) throw err;
+            if (!mainUser) {
+                res.json({success: false, message: 'No user found.'});
+            } else {
+                if (newName) {
+                    if (mainUser.permission === 'admin' || mainUser.permission === 'moderator') {
+                        User.findOne({ _id: editUser }, function (err, user) {
+                            if (err) throw err;
+                            if (!user) {
+                                res.json({ success: false, message: 'No user found' });
+                            } else {
+                                user.name = newName;
+                                user.save(function (err) {
+                                    if (err) {
+                                        console.log(err);
+                                    } else {
+                                        res.json({ success: true, message: 'Name has been changed' });
+                                    }
+                                });
+                            }
+                        });
+                    } else {
+                        res.json({ success: false, message: 'Insufficient Permissions' });
+                     }
+                }
+                if (newUsename) {
+                    if (mainUser.permission === 'admin' || mainUser.permission === 'moderator') {
+                        User.findOne({ _id: editUser }, function (err, user) {
+                            if (err) throw err;
+                            if (!user) {
+                                res.json({ success: false, message: 'No user found' });
+                            } else {
+                                user.username = newUsername;
+                                user.save(function (err) {
+                                    if (err) {
+                                        console.log(err);
+                                    } else {
+                                        res.json({ success: true, message: 'Username has been updated' });
+                                    }
+                                });
+                            }
+                        });
+                    } else {
+                        res.json({ success: false, message: 'Insufficient Permissions' });
+                    }
+                }
+                if (newEmail) {
+                    if (mainUser.permission === 'admin' || mainUser.permission === 'moderator') {
+                        User.findOne({ _id: editUser }, function (err, user) {
+                            if (err) throw err;
+                            if (!user) {
+                                res.json({ success: false, message: 'No user found' });
+                            } else {
+                                user.email = newEmail;
+                                user.save(function (err) {
+                                    if (err) {
+                                        console.log(err);
+                                    } else {
+                                        res.json({ success: true, message: 'E-mail has been updated' });
+                                    }
+                                });
+                            }
+                        });
+                    } else {
+                        res.json({ success: false, message: 'Insufficient Permissions' });
+                    }
+                }
+                if (newPermission) {
+                    if (mainUser.permission === 'admin' || mainUser.permission === 'moderator') {
+                        User.findOne({ _id: editUser }, function (err, user) {
+                            if (err) throw err;
+                            if (!user) {
+                                res.json({ success: false, message: 'No user found' });
+                            } else {
+                              if (newPermission === 'user') {
+                                  if (user.permission === 'admin') {
+                                      if (mainUser.permission !== 'admin') {
+                                          res.json({ success: false, message: 'Insufficient Permissions. You must be an admin to downgrade another admin' });
+                                      } else {
+                                          user.permission = newPermission;
+                                          user.save(function (err) {
+                                              if (err) {
+                                                  console.log(err);
+                                              } else {
+                                                  res.json({ success: true, message: 'Permissions have been updated' });
+                                              }
+                                          });
+                                      }
+                                  } else {
+                                      user.permission = newPermission;
+                                      user.save(function (err) {
+                                          if (err) {
+                                              console.log(err);
+                                          } else {
+                                              res.json({ success: true, message: 'Permissions have been updated' });
+                                          }
+                                      });
+                                  }
+                              }
+                              if (newPermission === 'moderator') {
+                                  if (user.permission === 'admin') {
+                                      if (mainUser.permission !== 'admin') {
+                                          res.json({ success: false, message: 'Insufficient Permissions. You must be an admin to downgrade another admin' });
+                                      } else {
+                                          user.permission = newPermission;
+                                          user.save(function (err) {
+                                              if (err) {
+                                                  console.log(err);
+                                              } else {
+                                                  res.json({ success: true, message: 'Permissions have been updated' });
+                                              }
+                                          });
+                                      }
+                                  } else {
+                                      user.permission = newPermission;
+                                      user.save(function (err) {
+                                          if (err) {
+                                              console.log(err);
+                                          } else {
+                                              res.json({ success: true, message: 'Permissions have been updated' });
+                                          }
+                                      });
+                                  }
+                              }
+                              if (newPermission === 'admin') {
+                                  if (mainUser.permission === 'admin') {
+                                      user.permission = newPermission;
+                                      user.save(function (err) {
+                                          if (err) {
+                                              console.log(err);
+                                          } else {
+                                              res.json({ success: true, message: 'Permissions have been updated' });
+                                          }
+                                      });
+                                  } else {
+                                      res.json({ success: false, message: 'Insufficient Permissions. You must be an admin to upgrade someone to admin level' });
+                                  }
+                              }
+                            }
+                        });
+                    } else {
+                        res.json({ success: false, message: 'Insufficient Permissions.' });
+                    }
+                }
+            }
+        });
+    });
 
 
 

@@ -61,7 +61,8 @@ const UserSchema = new Schema({
     email: {type: String, required: true, lowercase: true, unique: true, validate: emailValidator},
     active: {type: Boolean, required: true, default: false},
     temporarytoken: {type: String, required: true},
-    resettoken: {type: String, required: false}
+    resettoken: {type: String, required: false},
+    permission: { type: String, required: true, default: 'user' }
 });
 
 // SETTING UP PASSWORD PROTECTION USING BCRYPT

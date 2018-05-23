@@ -22,7 +22,7 @@ module.exports = function (router) {
         },
         tls: { rejectUnauthorized: false }
     });
-    // var client = nodemailer.createTransport(sgTransport(options)); // Use if using sendgrid configuration
+   //const client = nodemailer.createTransport(sgTransport(options)); // Use if using sendgrid configuration
 
 
     // USER REGISTRATION--------------------------------------------
@@ -378,23 +378,23 @@ module.exports = function (router) {
     //Create Middleware for token
     // Middleware for Routes that checks for token - Place all routes after this route that require the user to already be logged in
     router.use(function (req, res, next) {
-        const token = req.body.token || req.body.query || req.headers['x-access-token']; // Get from REQUEST or URL or HEADERS
+      const token = req.body.token || req.body.query || req.headers['x-access-token']; // Get from REQUEST or URL or HEADERS
 
-        if (token) {
+       if (token) {
             // verify a token symmetric
-            jwt.verify(token, secret, function(err, decoded) {
+           jwt.verify(token, secret, function(err, decoded) {
                 if (err) {
-                    res.json({success: false, message: 'Token invalid'}); // This happens when session is expired
-                } else {
-                    req.decoded = decoded;                                  //decoded basically takes the token combines with the SECRET, verifies it nad once its good it sends back decoded and sends back username and email
-                    next();         // Required to leave middleware
+                   res.json({success: false, message: 'Token invalid'}); // This happens when session is expired
+               } else {
+                   req.decoded = decoded;                                  //decoded basically takes the token combines with the SECRET, verifies it nad once its good it sends back decoded and sends back username and email
+                   next();         // Required to leave middleware
                 }
 
             });
-        } else {
-            res.json({ success: false, message: 'No token provided'});
-        }
-    });
+       } else {
+           res.json({ success: false, message: 'No token provided'});
+       }
+  });
     //ROUTE to GET currently logged in user
     router.post('/me', function (req, res) {
         res.send(req.decoded);
@@ -415,7 +415,7 @@ module.exports = function (router) {
 
     // PERMISSIONS
     // Route to get the current user's permission level
-    router.get('permission', function (req, res) {
+    router.get('/permission', function (req, res) {
         User.findOne({ username: req.decoded.username }, function (err, user) {
             if (err) throw err;
             if (!user) {
@@ -438,7 +438,7 @@ module.exports = function (router) {
                     // Check if user has editing/deleting privileges
                     if (mainUser.permission === 'admin' || mainUser.permission === 'moderator') {
                         if (!users) {
-                            res.json({ success: false, message: 'Users not found' });
+                            res.json({ success: false, message: 'User not found' });
                         } else {
                             res.json({ success: true, users: users, permission: mainUser.permission });
                         }
@@ -459,7 +459,7 @@ module.exports = function (router) {
             if (mainUser.permission !== 'admin') {
                 res.json({ success: false, message: 'Insufficient Permissions' });
             } else {
-                User.findOneAndRemove({ username: deletedUser }, function (err, user) {
+                User.findOneAndRemove({ username: deletedUser }, function (err) {
                         if (err) throw err;
                         res.json({ success: true, message: 'User Deleted !'});
                 });

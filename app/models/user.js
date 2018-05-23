@@ -79,7 +79,7 @@ UserSchema.pre('save', function(next) {
 
 // Mongoose TiTle Case Schema
 UserSchema.plugin(titlize, {
-    paths: [ 'name']
+    paths: [ 'name' ]
 });
 
 // METHOD FOR VALIDATING THE PASSWORD (compare)

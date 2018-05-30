@@ -15,10 +15,10 @@ module.exports = function (router) {
     //    };
 
     const client = nodemailer.createTransport({
-        service: 'Hotmail',
+        service: 'gmail',
         auth: {
-            user: 'ratko_korle@hotmail.com', // Your email address
-            pass: 'bamboleo123' // Your password
+            user: 'ratko.korlevski@gmail.com', // Your email address
+            pass: 'teatar' // Your password
         },
         tls: { rejectUnauthorized: false }
     });
@@ -67,8 +67,8 @@ module.exports = function (router) {
                         subject: 'Activation Link',
                         text: 'Hello' + user.name + 'Thank you for registering on our site. Please click on the link bellow to complete your activation:' +
                         'http://localhost:7000/activate/' + user.temporarytoken,
-                        html: 'Hello<strong>' + user.name + '</strong>,<br><br>Thank you for registering on our site.' +
-                        ' Please click on the link bellow to complete your activation:<br><br><a href="http://localhost:7000/activate' + user.temporarytoken + '">http://localhost:7000/activate</a>'
+                        html: 'Hello <strong>' + user.name + '</strong>,<br><br>Thank you for registering on our site.' +
+                        ' Please click on the link bellow to complete your activation:<br><br><a href="http://localhost:7000/activate/' + user.temporarytoken + '">http://localhost:7000/activate</a>'
                     };
 
                     client.sendMail(email, function(err, info){
@@ -139,7 +139,7 @@ module.exports = function (router) {
     });
 
     // ACTIVATION SUCCESS/Expired
-    router.put('/activate/:token' , function (req, res) {
+    router.get('/activate/:token' , function (req, res) {
         User.findOne({ temporarytoken: req.params.token }, function (err, user) {                           //when user clicks on confirmation link its going to be in browser URL so with this we grab it and search the database
             if (err) throw err;
             const token = req.params.token;                                                         // Save the token from URL for verification
@@ -223,7 +223,7 @@ module.exports = function (router) {
                         subject: 'Activation Link Request',
                         text: 'Hello' + user.name + 'Please click on the link bellow to complete your activation:' +
                         'http://localhost:7000/activate/' + user.temporarytoken,
-                        html: 'Hello<strong>' + user.name + '</strong>,<br><br>' +
+                        html: 'Hello <strong>' + user.name + '</strong>,<br><br>' +
                         'Please click on the link bellow to complete your activation:<br><br><a href="http://localhost:7000/activate' + user.temporarytoken + '">http://localhost:7000/activate</a>'
                     };
 
@@ -270,7 +270,7 @@ module.exports = function (router) {
                                 console.log('Message sent: ' + info.response);
                             }
                         });
-                        res.json({ success: true, message: 'Your username has been sent to' + user.email })
+                        res.json({ success: true, message: 'Your username has been sent to ' + user.email })
                     }
                 }
 
@@ -378,7 +378,7 @@ module.exports = function (router) {
     //Create Middleware for token
     // Middleware for Routes that checks for token - Place all routes after this route that require the user to already be logged in
     router.use(function (req, res, next) {
-      const token = req.body.token || req.body.query || req.headers['x-access-token']; // Get from REQUEST or URL or HEADERS
+      const token = req.headers['x-access-token']; // Get from REQUEST or URL or HEADERS
 
        if (token) {
             // verify a token symmetric

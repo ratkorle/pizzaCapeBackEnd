@@ -4,7 +4,7 @@ const Ingredients = require('../models/ingredients');
 module.exports = function (router) {
 
     // INSERT NEW INGREDIENT
-    router.post('/ingredients', function (req, res) {
+    router.post('/ingredient', function (req, res) {
         const ingredient = new Ingredients();
         ingredient.name = req.body.name;
         ingredient.description = req.body.description;
@@ -103,6 +103,15 @@ module.exports = function (router) {
                 }
             });
         }
+    });
+    router.get('/ingredients', function (req, res) {
+        Ingredients.find({}, function (err, ingredient) {
+            if (err) {
+                throw err;
+            }
+
+            res.send(ingredient);
+        });
     });
 
     return router;

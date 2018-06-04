@@ -24,7 +24,7 @@ module.exports = function (router) {
     });
 
     // CHECK IF INGREDIENT ALREADY EXIST IN DATABASE
-    router.post('/checkingredient', function (req, res) {
+    router.post('/checkIngredient', function (req, res) {
         Ingredients.findOne({ name: req.body.name }).select('name').exec(function (err, ingredient) {
             if (err) throw err;
             if (ingredient) {
@@ -36,7 +36,7 @@ module.exports = function (router) {
     });
 
     // DELETE INGREDIENT
-    router.delete('/deleteingredient/:name', function (req, res) {
+    router.delete('/deleteIngredient/:name', function (req, res) {
         // mozis da proveris za permission pokasno
         const deletedIngredient = req.params.name;
         Ingredients.findOneAndRemove({ name: deletedIngredient }, function (err) {
@@ -46,7 +46,7 @@ module.exports = function (router) {
     });
 
     // EDIT INGREDIENT
-    router.put('/editingredient/', function (req, res) {
+    router.put('/editIngredient/', function (req, res) {
         let editIngredient = req.body.id;
         let newName = req.body.name;
         let newDescription = req.body.description;
@@ -104,6 +104,7 @@ module.exports = function (router) {
             });
         }
     });
+    //Get ALL INGREDIENTS
     router.get('/ingredients', function (req, res) {
         Ingredients.find({}, function (err, ingredient) {
             if (err) {

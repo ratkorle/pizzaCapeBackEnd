@@ -392,7 +392,7 @@ module.exports = function (router) {
 
             });
        } else {
-           res.json({ success: false, message: 'No token provided'});
+           res.send(401, 'missing authorization header');
        }
   });
     //ROUTE to GET currently logged in user

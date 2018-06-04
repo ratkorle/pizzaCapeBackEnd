@@ -1,14 +1,16 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
+const Custom = require('./custom');
+const Pizza = require('./pizza');
+const User = require('./user');
 
 // BASIC Order SCHEMA
 const OrderSchema = new Schema({
-    //default mongo order ID
-    userId: {user.id} // user id
-    //date.time
-    //items - array of items  pizza and custom
-   //status - default OPEN
-// total price - total price of custom and pizza
+    userId: { type: Schema.Types.ObjectId, ref: 'User' },
+    date: { type: Date, default: Date.now },
+    orderItems: [{ type: Schema.Types.Mixed, ref: 'Pizza' + 'Custom'}],
+    totalPrice: {type: Number},
+    orderStatus: { type: String, default: 'Open'}
 });
 
 module.exports = mongoose.model('Order', OrderSchema);

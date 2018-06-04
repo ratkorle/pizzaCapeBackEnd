@@ -55,6 +55,7 @@ const passwordValidator = [
 
 // BASIC USERNAME SCHEMA
 const UserSchema = new Schema({
+    _id: Schema.Types.ObjectId,
     name: {type: String, required: true, validate: nameValidator},
     username: {type: String, lowercase: true, required: true, unique: true, validate: usernameValidator},
     password: {type: String, required: true, validate: passwordValidator, select: false},

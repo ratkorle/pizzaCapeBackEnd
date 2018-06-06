@@ -4,7 +4,7 @@ const jwt = require('jsonwebtoken'); // Keep user logged in using this library
 
 /* Exports */
 module.exports.initializeAdmin = initializeAdmin;
-module.exports.tokenMiddleware = tokenMiddleware;
+module.exports.checkToken = checkToken;
 
 function initializeAdmin() {
     User.findOne({
@@ -19,7 +19,7 @@ function initializeAdmin() {
     });
 }
 
-function tokenMiddleware (req, res, next) {
+function checkToken (req, res, next) {
     const token = req.headers['x-access-token']; // Get from REQUEST or URL or HEADERS
 
     if (token) {
@@ -28,7 +28,7 @@ function tokenMiddleware (req, res, next) {
             if (err) {
                 res.status(500).send('Token invalid'); // This happens when session is expired
             } else {
-                req.decoded = decoded;                                  //decoded basically takes the token combines with the SECRET, verifies it nad once its good it sends back decoded and sends back username and email
+                req.user = decoded;                                  //decoded basically takes the token combines with the SECRET, verifies it nad once its good it sends back decoded and sends back username and email
                 next();         // Required to leave middleware
             }
         });

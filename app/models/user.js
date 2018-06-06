@@ -4,6 +4,8 @@ const bcrypt = require('bcrypt-nodejs');
 const titlize = require('mongoose-title-case');
 const validate = require('mongoose-validator');
 
+const roles = ['admin', 'user', 'moderator'];
+
 // VALIDATORS
 const nameValidator = [
     validate({
@@ -68,13 +70,27 @@ const UserSchema = new Schema({
 // SETTING UP PASSWORD PROTECTION USING BCRYPT
 UserSchema.pre('save', function(next) {
     const user = this;
-    if (!user.isModified('password')) return next();                // If password is not touched don't do this function
+
+    if (!user.isModified('password')) {
+        return next();                // If password is not touched don't do this function
+    }
+
     bcrypt.hash(user.password, null, null, function(err, hash) {
       if (err) return next(err);
       user.password = hash;
-        next();
+      next();
     });
+});
 
+UserSchema.pre('findOneAndUpdate', function(next) {
+    const user = this;
+
+    if (user._update.$set.role && (roles.indexOf(user._update.$set.role) === -1)){
+        next('Invalid role');
+        return;
+    }
+
+    next();
 });
 
 // Mongoose TiTle Case Schema

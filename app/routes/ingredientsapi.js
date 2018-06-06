@@ -1,10 +1,11 @@
 const Ingredients = require('../models/ingredients');
+const userHelper = require('./../helper/user');
 
 
 module.exports = function (router) {
 
     // INSERT NEW INGREDIENT
-    router.post('/ingredient', function (req, res) {
+    router.post('/ingredient', userHelper.checkToken,  function (req, res) {
         const ingredient = new Ingredients();
         ingredient.name = req.body.name;
         ingredient.description = req.body.description;

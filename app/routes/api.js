@@ -1,29 +1,18 @@
 const User = require('../models/user');
 const jwt = require('jsonwebtoken'); // Keep user logged in using this library
-const secret = 'polarCape';
 const nodemailer = require('nodemailer');
-const sgTransport = require('nodemailer-sendgrid-transport');
+const config = require('./../helper/config');
+const userHelper = require('./../helper/user');
 
 module.exports = function (router) {
-    // Start Sendgrid Configuration Settings (Use only if using sendgrid)
-    //SENDGRID information
-    //  const options = {
-    //    auth: {
-    //        api_user: 'ratkorle',
-    //        api_key: 'bamboleo123'
-    //    }
-    //    };
-
     const client = nodemailer.createTransport({
         service: 'gmail',
         auth: {
-            user: 'ratko.korlevski@gmail.com', // Your email address
-            pass: 'teatar' // Your password
+            user: 'pizzacape4@gmail.com', // Your email address
+            pass: 'pizzacape123' // Your password
         },
         tls: { rejectUnauthorized: false }
     });
-   //const client = nodemailer.createTransport(sgTransport(options)); // Use if using sendgrid configuration
-
 
     // USER REGISTRATION--------------------------------------------
     router.post('/users', function(req, res) {
@@ -32,7 +21,7 @@ module.exports = function (router) {
         user.username = req.body.username;          // Save username from request to User object
         user.password = req.body.password;          // Save password from request to User object
         user.email = req.body.email;                // // Save email from request to User object
-        user.temporarytoken = jwt.sign({  username: user.username, email: user.email }, secret, {expiresIn: '24h' });   // Create a token for activating account through e-mail
+        user.temporarytoken = jwt.sign({  username: user.username, email: user.email }, config.secret, {expiresIn: '24h' });   // Create a token for activating account through e-mail
 
         // Check if request is valid and not empty or null
         if (req.body.name === null || req.body.name === '' || req.body.username === null || req.body.username === '' || req.body.password === null || req.body.password === '' || req.body.email === null || req.body.email === '') {
@@ -88,7 +77,7 @@ module.exports = function (router) {
     //USER LOGIN ---------------------------------------
     router.post('/authenticate', function (req, res) {
         const loginUser = (req.body.username).toLowerCase(); // Ensure username is checked in lowercase against database
-        User.findOne({ username: loginUser }).select('email username password active').exec(function (err, user) {
+        User.findOne({ username: loginUser }).select('email username password role active').exec(function (err, user) {
             if (err) throw err;
 
             if (!user) {                                                                                                       // COMPARING IF USER EXIST IN THE DATABASE
@@ -108,35 +97,35 @@ module.exports = function (router) {
                 } else if (!user.active) {
                     res.json({ success: false, message: 'The account is not activated yet. Please check your E-mail for activation link', expired: true });
                 } else {
-                    const token = jwt.sign({username: user.username, email: user.email}, secret, {expiresIn: '24h'});  //(FRONTEND) we need to save this token in browser storage by implementing it in frontend auth -SERVICES
-                    res.json({ success: true, message: 'User authenticated !', token: token});
+                    const token = jwt.sign({username: user.username, email: user.email}, config.secret, {expiresIn: '24h'});  //(FRONTEND) we need to save this token in browser storage by implementing it in frontend auth -SERVICES
+                    res.json({ success: true, message: 'User authenticated !', token: token,  role: user.role});
                 }
             }
         });
     });
 
     // CHECK USERNAME IF IT IS VALID
-    router.post('/checkusername', function (req, res) {
-        User.findOne({ username: req.body.username }).select('username').exec(function (err, user) {
-            if (err) throw err;
-            if (user) {
-                res.json({ success: false, message: 'That username is already taken...' });
-            } else {
-                res.json({ success: true, message: 'Valid username.' });
-            }
-        });
-    });
+    // router.post('/checkusername', function (req, res) {
+    //     User.findOne({ username: req.body.username }).select('username').exec(function (err, user) {
+    //         if (err) throw err;
+    //         if (user) {
+    //             res.json({ success: false, message: 'That username is already taken...' });
+    //         } else {
+    //             res.json({ success: true, message: 'Valid username.' });
+    //         }
+    //     });
+    // });
     // CHECK EMAIL IF IT IS VALID
-    router.post('/checkemail', function (req, res) {
-        User.findOne({ email: req.body.email }).select('email').exec(function (err, user) {
-            if (err) throw err;
-            if (user) {
-                res.json({ success: false, message: 'That e-mail is already taken...' });
-            } else {
-                res.json({ success: true, message: 'Valid e-mail.' });
-            }
-        });
-    });
+    // router.post('/checkemail', function (req, res) {
+    //     User.findOne({ email: req.body.email }).select('email').exec(function (err, user) {
+    //         if (err) throw err;
+    //         if (user) {
+    //             res.json({ success: false, message: 'That e-mail is already taken...' });
+    //         } else {
+    //             res.json({ success: true, message: 'Valid e-mail.' });
+    //         }
+    //     });
+    // });
 
     // ACTIVATION SUCCESS/Expired
     router.get('/activate/:token' , function (req, res) {
@@ -144,7 +133,7 @@ module.exports = function (router) {
             if (err) throw err;
             const token = req.params.token;                                                         // Save the token from URL for verification
 
-            jwt.verify(token, secret, function(err, token) {                                                // here we verify that token we sent if its expired
+            jwt.verify(token, config.secret, function(err, token) {                                                // here we verify that token we sent if its expired
                 if (err) {
                     res.json({success: false, message: 'Activation link has expired'});                 // This happens when session is expired
                 } else if (!user){                                                                      // If token is good but doesn't match the token of any user in the database
@@ -209,10 +198,11 @@ module.exports = function (router) {
             }
         });
     });
+
     router.put('/resend', function (req, res) {
         User.findOne({ username: req.body.username }).select('username name email temporarytoken').exec(function (err, user) {
             if (err) throw err;
-            user.temporarytoken = jwt.sign({  username: user.username, email: user.email }, secret, {expiresIn: '24h' });
+            user.temporarytoken = jwt.sign({  username: user.username, email: user.email }, config.secret, {expiresIn: '24h' });
             user.save( function (err) {
                 if (err) {
                     console.log(err);
@@ -287,7 +277,7 @@ module.exports = function (router) {
             } else if (!user.active) {
                 res.json({ success: false, message: 'Account has not yet been activated!' });
             } else {
-                user.resettoken = jwt.sign({  username: user.username, email: user.email }, secret, {expiresIn: '24h' });
+                user.resettoken = jwt.sign({  username: user.username, email: user.email }, config.secret, {expiresIn: '24h' });
                 // Save token to user in database
                 user.save(function (err) {
                     if (err) {
@@ -322,7 +312,7 @@ module.exports = function (router) {
             User.findOne({ resettoken: req.params.token }).select().exec(function (err, user) {
                 if (err) throw err;
                 const token = req.params.token;
-                jwt.verify(token, secret, function(err, decoded) {
+                jwt.verify(token, config.secret, function(err, decoded) {
                     if (err) {
                         res.json({success: false, message: 'Password link has expired'}); // This happens when session is expired
                     } else {
@@ -375,39 +365,19 @@ module.exports = function (router) {
         });
     });
 
-    //Create Middleware for token
-    // Middleware for Routes that checks for token - Place all routes after this route that require the user to already be logged in
-    router.use(function (req, res, next) {
-      const token = req.headers['x-access-token']; // Get from REQUEST or URL or HEADERS
-
-       if (token) {
-            // verify a token symmetric
-           jwt.verify(token, secret, function(err, decoded) {
-                if (err) {
-                   res.json({success: false, message: 'Token invalid'}); // This happens when session is expired
-               } else {
-                   req.decoded = decoded;                                  //decoded basically takes the token combines with the SECRET, verifies it nad once its good it sends back decoded and sends back username and email
-                   next();         // Required to leave middleware
-                }
-
-            });
-       } else {
-           res.send(401, 'missing authorization header');
-       }
-  });
     //ROUTE to GET currently logged in user
-    router.post('/me', function (req, res) {
+    router.post('/me', userHelper.tokenMiddleware, function (req, res) {
         res.send(req.decoded);
     });
     // Route to provide the user with a new token to renew session
 //RENEW TOKEN.. after the middleware coz user must be logged in
-    router.get('renewToken/:username', function (req, res) {
+    router.get('renewToken/:username', userHelper.tokenMiddleware, function (req, res) {
         User.findOne({ username: req.body.username }).select().exec(function (err, user) {
             if (err) throw err;
             if (!user) {
                 res.json({ success: false, message: 'No user was found' });
             } else {
-                const newToken =  jwt.sign({ username: user.username, email: user.email }, secret, {expiresIn: '24h'});  //(FRONTEND) we need to save this token in browser storage by implementing it in frontend auth -SERVICES
+                const newToken =  jwt.sign({ username: user.username, email: user.email }, config.secret, {expiresIn: '24h'});  //(FRONTEND) we need to save this token in browser storage by implementing it in frontend auth -SERVICES
                 res.json({ success: true, token: newToken});
             }
         });
@@ -415,7 +385,7 @@ module.exports = function (router) {
 
     // PERMISSIONS
     // Route to get the current user's permission level
-    router.get('/permission', function (req, res) {
+    router.get('/permission', userHelper.tokenMiddleware, function (req, res) {
         User.findOne({ username: req.decoded.username }, function (err, user) {
             if (err) throw err;
             if (!user) {
@@ -427,7 +397,7 @@ module.exports = function (router) {
     });
 
     // MANAGEMENT
-    router.get('/management', function (req, res) {
+    router.get('/management', userHelper.tokenMiddleware, function (req, res) {
         User.find({}, function (err, users) {
             if (err) throw err;
             User.findOne({ username: req.decoded.username }, function (err, mainUser) {
@@ -451,7 +421,7 @@ module.exports = function (router) {
         });
     });
     // DELETE USERS (admin only)
-    router.delete('/management/:username', function (req, res) {
+    router.delete('/management/:username', userHelper.tokenMiddleware, function (req, res) {
         const deletedUser = req.params.username;                    // Assign the username from request parameters to a variable
         if (!mainUser) {
             res.json({success: false, message: 'No user found.'});
@@ -468,7 +438,7 @@ module.exports = function (router) {
     });
 
     // Edit User
-    router.get('/edit/:id', function (req, res) {
+    router.get('/edit/:id', userHelper.tokenMiddleware, function (req, res) {
         const editUser = req.params.id;
         User.findOne({ username: req.decoded.username }, function (err, mainUser) {
             if (err) throw err;
@@ -490,7 +460,7 @@ module.exports = function (router) {
             }
         });
     });
-    router.put('/edit', function (req, res) {
+    router.put('/edit', userHelper.tokenMiddleware, function (req, res) {
         editUser = req.body._id;
         if (req.body.name)  newName = req.body.name;
         if (req.body.username)  newUsername = req.body.username;

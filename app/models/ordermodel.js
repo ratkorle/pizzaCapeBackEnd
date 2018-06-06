@@ -8,9 +8,11 @@ const User = require('./user');
 const OrderSchema = new Schema({
     userId: { type: Schema.Types.ObjectId, ref: 'User' },
     date: { type: Date, default: Date.now },
-    orderItems: [{ type: Schema.Types.Mixed, ref: 'Pizza' + 'Custom'}],
-    totalPrice: {type: Number},
+    items: [{ type: Schema.Types.Mixed, ref: 'Pizza' + 'Custom'}],
+    price: {type: Number},
     orderStatus: { type: String, default: 'Open'}
 });
+
+
 
 module.exports = mongoose.model('Order', OrderSchema);

@@ -5,7 +5,8 @@ module.exports = {
       email: 'ratko_korle@hotmail.com',
       name: 'Ratko Korlevski',
       active: true,
-      permission: 'admin',
+      role: 'admin',
       temporarytoken: false
-  }
+  },
+  secret: 'polarCape'
 };

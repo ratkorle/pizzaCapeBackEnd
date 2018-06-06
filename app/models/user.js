@@ -55,7 +55,6 @@ const passwordValidator = [
 
 // BASIC USERNAME SCHEMA
 const UserSchema = new Schema({
-    _id: Schema.Types.ObjectId,
     name: {type: String, required: true, validate: nameValidator},
     username: {type: String, lowercase: true, required: true, unique: true, validate: usernameValidator},
     password: {type: String, required: true, validate: passwordValidator, select: false},
@@ -63,7 +62,7 @@ const UserSchema = new Schema({
     active: {type: Boolean, required: true, default: false},
     temporarytoken: {type: String, required: true},
     resettoken: {type: String, required: false},
-    permission: { type: String, required: true, default: 'user' }
+    role: { type: String, required: true, default: 'user' }
 });
 
 // SETTING UP PASSWORD PROTECTION USING BCRYPT

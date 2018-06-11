@@ -37,10 +37,10 @@ module.exports = function (router) {
     });
 
     // DELETE INGREDIENT
-    router.delete('/deleteIngredient/:name', function (req, res) {
+    router.delete('/deleteIngredient/:_id', function (req, res) {
         // mozis da proveris za permission pokasno
-        const deletedIngredient = req.params.name;
-        Ingredients.findOneAndRemove({ name: deletedIngredient }, function (err) {
+        const deletedIngredient = req.params.id;
+        Ingredients.findOneAndRemove({ id: deletedIngredient }, function (err) {
             if (err) throw err;
             res.json({ success: true, message: 'Ingredient has been Deleted from Ingredients List !'});
         });

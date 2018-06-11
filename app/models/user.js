@@ -64,7 +64,11 @@ const UserSchema = new Schema({
     active: {type: Boolean, required: true, default: false},
     temporarytoken: {type: String, required: true},
     resettoken: {type: String, required: false},
-    role: { type: String, required: true, default: 'user' }
+    role: { type: String, required: true, default: 'user' },
+    history: [{
+        paid: { type: Number, default: 0},
+        item: { type: Schema.Types.Mixed, ref: 'Pizza' + 'Custom'}
+    }]
 });
 
 // SETTING UP PASSWORD PROTECTION USING BCRYPT

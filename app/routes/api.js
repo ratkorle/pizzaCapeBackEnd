@@ -405,13 +405,13 @@ module.exports = function (router) {
     });
 
     // DELETE USERS (admin only)
-    router.delete('/management/:username', userHelper.checkToken, function (req, res) {
-        const deletedUser = req.params.username;                    // Assign the username from request parameters to a variable
+    router.delete('/management/:id', userHelper.checkToken, function (req, res) {
+        const deletedUser = req.params.id;                    // Assign the username from request parameters to a variable
 
         if (req.user.role !== 'admin') {
             res.status(403).send('Insufficient Permissions');
         } else {
-            User.findOneAndRemove({username: deletedUser}, function (err) {
+            User.findOneAndRemove({id: deletedUser}, function (err) {
                 if (err) throw err;
                 res.json({success: true, message: 'User Deleted !'});
             });

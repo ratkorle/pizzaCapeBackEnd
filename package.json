@@ -20,6 +20,7 @@
   "author": "Ratko Korlevski",
   "license": "ISC",
   "dependencies": {
+    "async-waterfall": "^0.1.5",
     "bcrypt-nodejs": "0.0.3",
     "body-parser": "^1.18.2",
     "express": "^4.16.3",

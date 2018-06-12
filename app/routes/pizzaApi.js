@@ -119,6 +119,7 @@ module.exports = function (router) {
             res.send(pizza);
         });
     });
+    router
 
     return router;
 }; //

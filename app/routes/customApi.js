@@ -31,33 +31,7 @@ module.exports = function (router) {
             res.json({ success: true, message: 'Pizza has been Deleted from Cart !'});
         });
     });
-    // EDIT Custom
-    router.put('/editCustom/', function (req, res) {
-        let editCustom = req.body.id;
-        let newItems = [];
 
-        if (newItems) {
-            Custom.findOne({ _id: editCustom }, function (err, custom) {
-                if (err) throw err;
-                if (!custom) {
-                    res.json({ success: false, message: 'No Pizza found' });
-                } else if (req.body.items && (req.body.items instanceof Array) === false) {
-                    res.send('You must provide items as array to create new Pizza');
-                } else {
-                    newItems = req.body.items;
-                    custom.price = 0;
-                    custom.items = newItems;
-                    custom.save(function (err) {
-                        if (err) {
-                            console.log(err);
-                        } else {
-                            res.json({ success: true, message: 'Pizza Ingredients have been updated' });
-                        }
-                    });
-                }
-            });
-        }
-    });
     //Get ALL PIZZA's
     router.get('/customList', function (req, res) {
         Custom.find({}, function (err, custom) {
@@ -70,4 +44,4 @@ module.exports = function (router) {
     });
 
     return router;
-}; //
+};

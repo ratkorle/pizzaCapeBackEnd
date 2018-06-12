@@ -455,6 +455,14 @@ module.exports = function (router) {
                 });
         }
     });
+    router.get('/allUsers', userHelper.checkToken, function (req, res) {
+        User.find({}, function (err, user) {
+            if (err) {
+                throw err;
+            }
+            res.send(user);
+        });
+    });
 
 
 

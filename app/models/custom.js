@@ -11,25 +11,25 @@ const CustomSchema = new Schema({
     pizzaType: {type: String, default: 'custom'}
 });
 
-CustomSchema.pre('save', function (next) {
-    let customObj = this;
-    let ingredientsIdArr = customObj.items.map((ingredientObj) => {
-        return ingredientObj.id;
-    });
-
-    Ingredient.find({'_id': { '$in': ingredientsIdArr}})
-        .then(function (ingredients) {
-            let sum = 0;
-            ingredients.forEach((ingredient, index) => {
-                sum += (ingredient.price * customObj.items[index].quantity);
-            });
-            customObj.price = sum;
-
-            next();
-        })
-        .catch(function (err) {
-            throw err;
-        });
-});
+// CustomSchema.pre('save', function (next) {
+//     let customObj = this;
+//     let ingredientsIdArr = customObj.items.map((ingredientObj) => {
+//         return ingredientObj.id;
+//     });
+//
+//     Ingredient.find({'_id': { '$in': ingredientsIdArr}})
+//         .then(function (ingredients) {
+//             let sum = 0;
+//             ingredients.forEach((ingredient, index) => {
+//                 sum += (ingredient.price * customObj.items[index].quantity);
+//             });
+//             customObj.price = sum;
+//
+//             next();
+//         })
+//         .catch(function (err) {
+//             throw err;
+//         });
+// });
 
 module.exports = mongoose.model('Custom', CustomSchema);

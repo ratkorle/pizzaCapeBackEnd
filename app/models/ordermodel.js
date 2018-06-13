@@ -9,10 +9,10 @@ const OrderSchema = new Schema({
     userId: { type: Schema.Types.ObjectId, ref: 'User' },
     date: { type: Date, default: Date.now },
     items: [{
-          item: { type: Schema.Types.ObjectId},
-          quantity: { type: Number, default: 1},
+          name: { type: String},
+          amount: { type: Number},
           price: { type: Number, default: 0},
-          name: { type: String },
+          size: { type: String },
     }],
     total: {type: Number, default: 0},
     orderStatus: { type: String, default: 'Open'}

@@ -67,7 +67,7 @@ const UserSchema = new Schema({
     role: { type: String, required: true, default: 'user' },
     history: [{
         paid: { type: Number, default: 0},
-        item: { type: Schema.Types.Mixed, ref: 'Pizza' + 'Custom'}
+        item: []
     }]
 });
 

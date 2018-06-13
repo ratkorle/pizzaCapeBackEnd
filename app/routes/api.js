@@ -405,7 +405,7 @@ module.exports = function (router) {
     });
 
     // DELETE USERS (admin only)
-    router.delete('/management/:id', userHelper.checkToken, function (req, res) {
+    router.delete('/management/:_id', userHelper.checkToken, function (req, res) {
         const deletedUser = req.params.id;                    // Assign the username from request parameters to a variable
 
         if (req.user.role !== 'admin') {

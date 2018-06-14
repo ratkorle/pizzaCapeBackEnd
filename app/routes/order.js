@@ -5,7 +5,7 @@ const User = require('../models/user');
 const userHelper = require('./../helper/user');
 //const orderHelper = require('./../helper/order');
 const waterfall = require('async-waterfall');
-
+// const stripe = require("stripe")("sk_test_nYn7VxCUFzJJNZDmXoHFhpVo");
 
 
 module.exports = function (router) {
@@ -94,51 +94,23 @@ module.exports = function (router) {
     // });
     router.post('/checkout', userHelper.checkToken, function(req, res, next) {
 
-        let stripeToken = req.body.stripeToken;
-        let currentCharges = Math.round(req.body.stripeMoney * 100);
-        stripe.customers.create({
-            source: stripeToken,
-        }).then(function(customer) {
-            return stripe.charges.create({
-                amount: currentCharges,
-                currency: 'usd',
-                customer: customer.id
-            });
-        }).then(function(charge) {
-            waterfall([
-                function(callback) {
-                    Order.findOne({ userId: req.user._id }, function(err, order) {
-                        callback(err, order);
-                    });
-                },
-                function(order, callback) {
-                    User.findOne({ _id: req.user._id }, function(err, user) {
-                        if (user) {
-                            for (let i = 0; i < order.items.length; i++) {
-                                user.history.push({
-                                    item: cart.items[i].item,
-                                    paid: cart.items[i].price
-                                });
-                            }
+        const order = new Order();
+        order.items = [];
 
-                            user.save(function(err, user) {
-                                if (err) return next(err);
-                                callback(err, user);
-                            });
-                        }
-                    });
-                },
-                function(user) {
-                    Order.update({ userID: user._id }, { $set: { items: [], total: 0 }}, function(err, updated) {
-                        if (updated) {
-                            res.redirect('/profile');
-                        }
-                    });
+        if(req.body.items && (req.body.items instanceof Array) === false) {
+            res.send('You must provide items as array to create new Pizza');
+        } else {
+            order.items = req.body.items;
+            order.total = req.body.total;
+            order.save(function (err) {
+                if (err) {
+                    res.status(400).json({success: false, message: err});
+                } else {
+                    res.json({success: true, message: 'New Order has been made'});
                 }
-            ]);
-        });
+            });
 
-
+        }
     });
     router.get('/allOrders', function (req, res) {
         Order.find({}, function (err, order) {
